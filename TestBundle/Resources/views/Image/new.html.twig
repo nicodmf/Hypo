@@ -1,0 +1,16 @@
+<h1>Image creation</h1>
+
+<form action="{{ path('hypo_test_image_create') }}" method="post" {{ form_enctype(form) }}>
+    {{ form_widget(form) }}
+    <p>
+        <button type="submit">Create</button>
+    </p>
+</form>
+
+<ul class="record_actions">
+    <li>
+        <a href="{{ path('hypo_test_image') }}">
+            Back to the list
+        </a>
+    </li>
+</ul>

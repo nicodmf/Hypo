@@ -1,0 +1,39 @@
+<h1>File</h1>
+
+<table class="record_properties">
+    <tbody>
+        <tr>
+            <th>Id</th>                <td>{{ entity.id }}</td>        </tr>
+        <tr>
+            <th>Path</th>                <td>{{ entity.path }}</td>        </tr>
+        <tr>
+            <th>Mimetype</th>                <td>{{ entity.mimetype }}</td>        </tr>
+        <tr>
+            <th>Originalname</th>                <td>{{ entity.originalName }}</td>        </tr>
+        <tr>
+            <th>Size</th>                <td>{{ entity.size }}</td>        </tr>
+        <tr>
+            <th>Legend</th>                <td>{{ entity.legend }}</td>        </tr>
+        <tr>
+            <th>Description</th>                <td>{{ entity.description }}</td>        </tr>
+    </tbody>
+</table>
+
+<ul class="record_actions">
+    <li>
+        <a href="{{ path('hypo_test_file') }}">
+            Back to the list
+        </a>
+    </li>
+    <li>
+        <a href="{{ path('hypo_test_file_edit', { 'id': entity.id }) }}">
+            Edit
+        </a>
+    </li>
+    <li>
+        <form action="{{ path('hypo_test_file_delete', { 'id': entity.id }) }}" method="post">
+            {{ form_widget(delete_form) }}
+            <button type="submit">Delete</button>
+        </form>
+    </li>
+</ul>

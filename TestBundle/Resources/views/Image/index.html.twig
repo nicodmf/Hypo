@@ -1,0 +1,51 @@
+<h1>Image list</h1>
+
+<table class="records_list">
+    <thead>
+        <tr>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Id</th>
+            <th>Path</th>
+            <th>Mimetype</th>
+            <th>Originalname</th>
+            <th>Size</th>
+            <th>Legend</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for entity in entities %}
+        <tr>
+            <td><a href="{{ path('hypo_test_image_show', { 'id': entity.id }) }}">{{ entity.width }}</a></td>
+            <td>{{ entity.height }}</td>
+            <td>{{ entity.id }}</td>
+            <td>{{ entity.path }}</td>
+            <td>{{ entity.mimetype }}</td>
+            <td>{{ entity.originalName }}</td>
+            <td>{{ entity.size }}</td>
+            <td>{{ entity.legend }}</td>
+            <td>{{ entity.description }}</td>
+            <td>
+                <ul>
+                    <li>
+                        <a href="{{ path('hypo_test_image_show', { 'id': entity.id }) }}">show</a>
+                    </li>
+                    <li>
+                        <a href="{{ path('hypo_test_image_edit', { 'id': entity.id }) }}">edit</a>
+                    </li>
+                </ul>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<ul>
+    <li>
+        <a href="{{ path('hypo_test_image_new') }}">
+            Create a new entry
+        </a>
+    </li>
+</ul>
