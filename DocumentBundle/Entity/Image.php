@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Hypo\DocumentBundle\Entity\File
  * @ORM\MappedSuperClass
+ * @ORM\Table(name="DocumentImage")^M
  * @ORM\HasLifecycleCallbacks
  */
 class Image extends File

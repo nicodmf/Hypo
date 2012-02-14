@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Hypo\DocumentBundle\Entity\DocumentCollection
  *
- * @ORM\Table(name="collections")
+ * @ORM\Table(name="DocumentCollections")
  * @ORM\Entity
  */
 class DocumentCollection
