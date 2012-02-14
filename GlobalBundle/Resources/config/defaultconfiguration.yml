@@ -1,0 +1,8 @@
+hypo: 
+  layout:
+    template: HypoLayoutBundle::layout.html.twig
+    parameters: ~
+  fileserver:
+    testfile:
+      repository: HypoTestBundle:File #The repository name
+      availability: false #false or a period in second
