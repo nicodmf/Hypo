@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Hypo\TestBundle\Entity\File
  * @ORM\Entity
- * @ORM\Table("DocumentTestFile")
+ * @ORM\Table(name="DocumentTestFile")
  */
 class File extends \Hypo\DocumentBundle\Entity\File
 {

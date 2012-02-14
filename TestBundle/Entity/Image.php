@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Hypo\TestBundle\Entity\Image
  * @ORM\Entity
- * @ORM\Table("TestDocumentImage")
+ * @ORM\Table(name="DocumentTestImage")
  */
 class Image extends \Hypo\DocumentBundle\Entity\Image
 {

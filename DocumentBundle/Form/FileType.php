@@ -12,9 +12,9 @@ class FileType extends AbstractType
         $builder
             //->add('path')
             //->add('mimetype')
+            ->add('file')
             ->add('legend')
             ->add('description')
-            ->add('file')
         ;
     }
     public function getName()
