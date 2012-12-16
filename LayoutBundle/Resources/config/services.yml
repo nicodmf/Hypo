@@ -1,14 +1,17 @@
 parameters:
     templating.layout.class: Hypo\LayoutBundle\EventListener\HypoLayoutListener
-    templating.layout.intercept_redirects: true
+    templating.layout.intercept_redirects: false
     templating.layout.mode: all
+    
 services: 
     hypo.layout.writer.twig.extension: 
         class: %templating.layout.class%
         tags:
             - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse, priority: -127 }
         arguments:
-            - @templating.engine.twig
+            - "@templating.engine.twig"
+            - "@hypo.layout.helpers.twig.extension"
+            - "@hypo.layout.controller_listener"
             - %hypo.layout.configuration%
             - %templating.layout.intercept_redirects%
             - %templating.layout.mode%
@@ -18,3 +21,9 @@ services:
        tags: 
            - { name: twig.extension }
        arguments: [ ]
+    
+    hypo.layout.controller_listener:
+       class: Hypo\LayoutBundle\EventListener\ControllerListener
+       tags:
+           - { name: kernel.event_listener, event: kernel.controller, method: onCoreController, priority:-255 }
+       arguments: ["@annotation_reader"]

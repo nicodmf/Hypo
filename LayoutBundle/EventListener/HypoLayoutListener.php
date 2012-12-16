@@ -1,10 +1,6 @@
 <?php
 
 /*
- * This file is part of the Symfony package.
- *
- * (c) Fabien Potencier <fabien@symfony.com>
- *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
@@ -16,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Bundle\TwigBundle\TwigEngine;
+use Hypo\LayoutBundle\DependencyInjection\LayoutTwigExtension;
 
 /**
  * WebDebugToolbarListener injects the Web Debug Toolbar.
@@ -25,75 +22,104 @@ use Symfony\Bundle\TwigBundle\TwigEngine;
  * The WDT is only injected on well-formed HTML (with a proper </body> tag).
  * This means that the WDT is never included in sub-requests or ESI requests.
  *
- * @author Fabien Potencier <fabien@symfony.com>
  */
 class HypoLayoutListener
 {
-    const DISABLED        = 1;
-    const ENABLED         = 2;
-    const ENABLED_MINIMAL = 3;
+	 const DISABLED		  = 0;
+	 const ENABLED			  = 1;
+	 const ENABLED_MINIMAL = 2;
 
-    protected $templating;
-    protected $interceptRedirects;
-    protected $mode;
+	 protected $templating;
+	 protected $controllerListener;
+	 protected $interceptRedirects;
+	 protected $mode;
 
-    public function __construct(TwigEngine $templating,  $configuration, $interceptRedirects = false, $mode = self::ENABLED)
-    {
-        $this->templating = $templating;
-		$this->configuration = $configuration;
-        $this->interceptRedirects = (Boolean) $interceptRedirects;
-        $this->mode = (integer) $mode;
-    }
+	 public function __construct(
+				TwigEngine $templating, 
+				LayoutTwigExtension $layout,
+				ControllerListener $controllerListener,
+				array $configuration,
+				$interceptRedirects = false,
+				$mode = self::ENABLED)
+	 {		 
+		  $this->templating = $templating;		  
+		  $this->layout = $layout;
+		  $this->controllerListener = $controllerListener;
+		  $this->configuration = $configuration;		  
+		  $this->interceptRedirects = (Boolean) $interceptRedirects;
+		  
+		  $this->mode = $configuration['activated'] ?: (integer) $mode;
+		  $this->templates = $configuration['templates'];
+	 }
 
-    public function isVerbose()
-    {
-        return self::ENABLED === $this->mode;
-    }
+	 public function isVerbose()
+	 {
+		  return self::ENABLED === $this->mode;
+	 }
 
-    public function isEnabled()
-    {
-        return self::DISABLED !== $this->mode;
-    }
+	 public function isEnabled()
+	 {
+		  return self::DISABLED !== $this->mode;
+	 }
 
-    public function onKernelResponse(FilterResponseEvent $event)
-    {
-        if (HttpKernelInterface::MASTER_REQUEST !== $event->getRequestType()) {
-            return;
-        }
+	 public function onKernelResponse(FilterResponseEvent $event)
+	 {
+		  if (HttpKernelInterface::MASTER_REQUEST !== $event->getRequestType()) {
+				return;
+		  }
 
-        $response = $event->getResponse();
-        $request = $event->getRequest();
+		  $response = $event->getResponse();
+		  $request = $event->getRequest();
 
-        // do not capture redirects or modify XML HTTP Requests
-        if ($request->isXmlHttpRequest()) {
-            return;
-        }
+		  // do not capture redirects or modify XML HTTP Requests
+		  if ($request->isXmlHttpRequest()) {
+				return;
+		  }
 
-        if (self::DISABLED === $this->mode
-            || !$response->headers->has('X-Debug-Token')
-            || '3' === substr($response->getStatusCode(), 0, 1)
-            ||	(
+		  if (self::DISABLED === $this->mode
+//				|| !$response->headers->has('X-Debug-Token')
+				|| '3' === substr($response->getStatusCode(), 0, 1)
+				||	(
 				$response->headers->has('Content-Type')
 				&& false === strpos($response->headers->get('Content-Type'), 'html')
 				)
-            || 'html' !== $request->getRequestFormat()
-        ) {
-            return;
-        }
-		
+				|| 'html' !== $request->getRequestFormat()
+		  ) {
+				return;
+		  }
 		$paramsConfig = $this->configuration['parameters'];
+		
 
 		$params = array_merge(
+			is_array($paramsConfig) ? $paramsConfig : array(),
 			array('content' => $response->getContent()),
-			is_array($paramsConfig)?$paramsConfig:array()
+			$this->layout->variables
 		);
-        $response->setContent(
-			$this->templating->render(
-				$this->configuration['template'],
+		$controller = $request->attributes->get('_controller');
+
+		$template = $this->getTemplateName(
+				   $this->controllerListener,
+					$controller,
+					$this->configuration['templates']);
+		
+		$response->setContent(
+			$this->templating->render(				
+				$template,				
 				$params
 			)
 		);
-        $response->setStatusCode(200);
-
-    }
+		$response->setStatusCode(200);
+	 }
+	 
+	 public function getTemplateName(&$controllerListener, &$controller_method, &$templates){
+		 if($controllerListener->layout)
+			 return $controllerListener->layout;
+		 foreach($templates as $target=>$template){
+			 if($target=="default")continue;
+			 if(0===strpos($controller_method, $target)){
+				 return $template;
+			 }
+		 }
+		 return $templates['default'];
+	 }
 }

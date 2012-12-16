@@ -3,42 +3,57 @@
 namespace Hypo\LayoutBundle\DependencyInjection;
 
 use Symfony\Component\Translation\TranslatorInterface;
-use Symfony\Component\DependencyInjection\Container;
 
-class css{
+class Container{
+	static $inc=1;
+	public $order;
 	public $position=null;
 	public $link=null;
+	public $html;
+	public function __construct($position=null, $html='html') {
+		$this->position = $position;
+		$this->html = $html==="html";
+		$this->order = static::$inc++;
+	}
+	public function isLink(){
+		return $this->link !== null;
+	}
+	static function compare(Container $c1, Container $c2){
+		if($c1->position !== $c2->position );
+			return $c1->position < $c2->position ? -1 : 1;
+		return $c1->order < $c2->order ? -1 : 1;
+	}
+	public function setLink($link) {
+		$this->link = $link;
+		return $this;
+	}
+}
+
+class CSS extends Container{
 	public $rules=null;
 	public $media="all";
-	public function __construct($link=null, $rules=null, $media="all", $position=null){
-		$this->link = $link;
-		$this->rules = $rules;
+	public function __construct($media="all", $position=null, $html='html'){
 		$this->media = $media;
-		$this->position = $position;
+		parent::__construct($position, $html);
 	}
-	static function compare(css $css1, css $css2){
+	static function compare(Container $css1, Container $css2){
 		if($css1->rules === null && $css2->rules !== null) return  1;
 		if($css1->rules !== null && $css2->rules === null) return -1;
 		$cpMedia = strcmp($css1->media, $css2->media);
-		if($cpMedia===0){
-			if($css1->position === $css2->position ) return 0;
-			return $css1->position < $css2->position ? -1 : 1;
-		}
-		return $cpMedia;			
+		if($cpMedia!==0)
+			return $cpMedia;
+		return self::compare($css1, $css2);
+	}
+	public function setRules($rules) {
+		$this->rules = $rules;
+		return $this;
 	}
 }
-class js{
-	public $position=null;
-	public $link=null;
-	public $rules=null;
-	public function __construct($link=null, $rules=null, $position=null){
-		$this->link = $link;
-		$this->rules = $rules;
-		$this->position = $position;
-	}
-	static function compare(js $js1, js $js2){
-		if($js1->position === $js2->position ) return 0;
-		return $js1->position < $js2->position ? -1 : 1;
+class JS extends Container{
+	public $script=null;
+	public function setScript($script) {
+		$this->script = $script;
+		return $this;
 	}
 }
 
@@ -46,69 +61,119 @@ class LayoutTwigExtension extends \Twig_Extension {
 	
 	protected $css = array();
 	protected $js = array();
+	public $variables = array();
 
-    public function __construct()
-    {
-    }
-    
-    public function getFilters()
-    {
-        return array(
-            'addcss'  => new \Twig_Filter_Method($this, 'addcss', array('is_safe' => array('html'))),
-            'addjs'  => new \Twig_Filter_Method($this, 'addjs', array('is_safe' => array('html'))),
-            'getcss'  => new \Twig_Filter_Method($this, 'getcss', array('is_safe' => array('html'))),
-            'getjs'  => new \Twig_Filter_Method($this, 'getjs', array('is_safe' => array('html'))),
-        );
-    }
+	public function __construct()
+	{
+	}
+	
+	public function getFilters()
+	{
+		return array(
+			'css'  => new \Twig_Filter_Method($this, 'filter_css', array('is_safe' => array('html'))),
+			'js'  => new \Twig_Filter_Method($this, 'filter_js', array('is_safe' => array('html'))),
+		);
+	}
 
-    public function getFunctions()
-    {
-        return $this->getFilters();
-    }
+	public function getFunctions()
+	{
+		//\Twig_NodeVisitor_SafeAnalysis::setSafe();
+		return array(
+			'css'  => new \Twig_Function_Method($this, 'css', array('is_safe' => array('html'))),
+			'js'  => new \Twig_Function_Method($this, 'js', array('is_safe' => array('html'))),
+		);
+	}
 
-    public function addcss($css, $media="all", $position=null)
-    {
-        $this->css[] = new css($css, null, $media, $position);
-    }
-    public function addjs($js, $position=null)
-    {
-        $this->js[] = new js($js, null, $position);
-    }
-	public function getcss($html=true, $media=false, $position=false){
-		usort($this->css, array(__NAMESPACE__."\\css", "compare"));
+	public function getTokenParsers()
+	{
+		return array(
+			new VariableTokenParser(),
+		);
+	}
+	
+	public function variable($name, $value, $merge=false){
+		$this->variables[$name] = $merge ? $this->variables[$name] : "";
+		$this->variables[$name] = "$value";		
+	}
+
+	public function filter_css($css, $position=null, $media="all", $html='html')
+	{
+		$this->css('src', $css, $media, $position, $html);
+	}
+	public function filter_js($js, $position=null, $html='html')
+	{ 
+		$this->js('src', $js, $position, $html);
+	}
+	public function css($action='display', $css="", $position=null, $media="all", $html='html')
+	{
+		switch($action){
+			case 'display' : return $this->getcss($media, $position, $html);
+			case 'link': $this->css[] = (new CSS($media, $position, $html))->setLink($css); break;
+			case 'src': $this->css[] = (new CSS($media, $position, $html))->setRules($css); break;
+		}
+		return "";
+	}
+	public function js($action='display', $js="", $position=null, $html='html')
+	{
+		switch($action){
+			case 'display' : return $this->getjs($position, $html);
+			case 'link': $this->js[] = (new JS($position, $html))->setLink($js); break;
+			case 'src': $this->js[] = (new JS($position, $html))->setScript($js); break;
+		}
+	}
+	public function getcss($position=null, $media=null, $html="html", $env="dev"){
+		$html = $html==="html";
+		usort($this->css, array( __NAMESPACE__ . "\\css", "compare"));
 		$string = "\n";
 
 		foreach($this->css as $css){
-			if(false!==$media and $media!==$css->media)continue;
-			if(false!==$position and $position!==$css->position)continue;
-			if($css->rules!=null and $html)
-				$string .= "\t\t".'<style media="'.$css->media.'">'."\n".$css->rules."\n\t\t</style>";
-			elseif($css->rules==null and $html)
-				$string .= "\t\t".'<link media="'.$css->media.'" rel="stylesheet" type="text/css" href="'.$css->link.'" />'."\n";
-			elseif(!$html and $css->rules==null)
-				$string .= $css->link;
+			
+			if(null!==$media and $media!==$css->media)continue;
+			if(null!==$position and $position!==$css->position)continue;
+			
+			if($css->isLink()){
+				$link = is_array($js->link) ? $js->link[$env] : $js->link;					
+				if($html)
+					$string .= "\t\t".'<link media="'.$css->media.'" rel="stylesheet" type="text/css" href="'.$link.'" />'."\n";
+				else
+					$string .= $link."\n";
+			}else{
+				if($html and !$css->html)
+					$string .= "\t\t".'<style media="'.$css->media.'">'."\n".$css->rules."\n\t\t</style>";
+				else
+					$string .= $css->rules."\n";
+			}
 		}		
 		return $string;
 	}
-	public function getjs($html=true, $position=false){
+	public function getjs($position=null, $html="html", $env="dev"){
+		$html = $html==="html";
 		usort($this->js, array(__NAMESPACE__."\\js", "compare"));
 		$string = "\n";
 
-		foreach($this->js as $js){
-			if(false!==$position and $position!==$js->position) continue;
-			if($js->rules!=null and $html)
-				$string .= "\t\t".'<script language="javascript" type="text/javascript">'."\n".$js->rules."\n\t\t</script>";
-			elseif($js->rules==null and $html)
-				$string .= "\t\t".'<script language="javascript" type="text/javascript" src="'.$js->link.'"></script>'."\n";
-			elseif(!$html and $js->rules==null)
-				$string .= $js->link;
+		foreach($this->js as $js){		
+			
+			if(null!==$position and $position!==$js->position) continue;
+			
+			if($js->isLink()){
+				$link = is_array($js->link) ? $js->link[$env] : $js->link;					
+				if($html)
+					$string .= "\t\t".'<script language="javascript" type="text/javascript" src="'.$link.'"></script>'."\n";
+				else
+					$string .= $link."\n";
+			}else{
+				if($html and !$js->html)
+					$string .= "\t\t".'<script language="javascript" type="text/javascript">'."\n".$js->script."\n\t\t</script>";
+				else
+					$string .= $js->script."\n";
+			}
 		}
-		return $string;
+		return trim($string);
 	}	
-    
-    public function getName()
-    {
-        return 'twig.extension.layout';
-    }
-    
+	
+	public function getName()
+	{
+		return 'twig.extension.layout';
+	}
+	
 }
