@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Hypo\DocumentBundle\Entity\File
- * @ORM\MappedSuperClass
+ * @ORM\MappedSuperclass
  * @ORM\Table(name="DocumentImage")
  * @ORM\HasLifecycleCallbacks
  */

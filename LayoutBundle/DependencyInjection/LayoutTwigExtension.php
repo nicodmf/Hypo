@@ -15,6 +15,10 @@ class Container{
 		$this->html = $html==="html";
 		$this->order = static::$inc++;
 	}
+	static public function create($position=null, $html='html') {
+		$class = get_called_class();	
+		return new $class($position, $html);
+	}
 	public function isLink(){
 		return $this->link !== null;
 	}
@@ -35,6 +39,9 @@ class CSS extends Container{
 	public function __construct($media="all", $position=null, $html='html'){
 		$this->media = $media;
 		parent::__construct($position, $html);
+	}
+	static public function create($media="all", $position=null, $html='html') {
+		return new CSS($media, $position, $html);
 	}
 	static function compare(Container $css1, Container $css2){
 		if($css1->rules === null && $css2->rules !== null) return  1;
@@ -108,31 +115,32 @@ class LayoutTwigExtension extends \Twig_Extension {
 	{
 		switch($action){
 			case 'display' : return $this->getcss($media, $position, $html);
-			case 'link': $this->css[] = (new CSS($media, $position, $html))->setLink($css); break;
-			case 'src': $this->css[] = (new CSS($media, $position, $html))->setRules($css); break;
+			case 'link': $this->css[] = CSS::create($media, $position, $html)->setLink($css); break;
+			case 'src': $this->css[] = CSS::create($media, $position, $html)->setRules($css); break;
+			default: call_user_func_array(array($this, "js"), array_merge(array("link"),func_get_args())); break;
 		}
-		return "";
 	}
 	public function js($action='display', $js="", $position=null, $html='html')
 	{
 		switch($action){
 			case 'display' : return $this->getjs($position, $html);
-			case 'link': $this->js[] = (new JS($position, $html))->setLink($js); break;
-			case 'src': $this->js[] = (new JS($position, $html))->setScript($js); break;
+			case 'link': $this->js[] = JS::create($position, $html)->setLink($js); break;
+			case 'src': $this->js[] = JS::create($position, $html)->setScript($js); break;
+			default: call_user_func_array(array($this, "js"), array_merge(array("link"),func_get_args())); break;
 		}
 	}
 	public function getcss($position=null, $media=null, $html="html", $env="dev"){
 		$html = $html==="html";
 		usort($this->css, array( __NAMESPACE__ . "\\css", "compare"));
 		$string = "\n";
-
+		
 		foreach($this->css as $css){
 			
 			if(null!==$media and $media!==$css->media)continue;
 			if(null!==$position and $position!==$css->position)continue;
 			
 			if($css->isLink()){
-				$link = is_array($js->link) ? $js->link[$env] : $js->link;					
+				$link = is_array($js->link) ? $js->link[$env] : $js->link;
 				if($html)
 					$string .= "\t\t".'<link media="'.$css->media.'" rel="stylesheet" type="text/css" href="'.$link.'" />'."\n";
 				else
@@ -151,12 +159,12 @@ class LayoutTwigExtension extends \Twig_Extension {
 		usort($this->js, array(__NAMESPACE__."\\js", "compare"));
 		$string = "\n";
 
-		foreach($this->js as $js){		
+		foreach($this->js as $js){
 			
 			if(null!==$position and $position!==$js->position) continue;
 			
 			if($js->isLink()){
-				$link = is_array($js->link) ? $js->link[$env] : $js->link;					
+				$link = is_array($js->link) ? $js->link[$env] : $js->link;
 				if($html)
 					$string .= "\t\t".'<script language="javascript" type="text/javascript" src="'.$link.'"></script>'."\n";
 				else
@@ -169,8 +177,8 @@ class LayoutTwigExtension extends \Twig_Extension {
 			}
 		}
 		return trim($string);
-	}	
-	
+	}
+
 	public function getName()
 	{
 		return 'twig.extension.layout';

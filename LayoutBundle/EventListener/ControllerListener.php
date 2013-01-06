@@ -8,12 +8,14 @@ use Hypo\LayoutBundle\Annotations\Layout;
  
 class ControllerListener {
 	
-	private $reader;
 	const annoLayoutCName = "Hypo\LayoutBundle\Annotations\Layout";
 	const annoBlocCName = "Hypo\LayoutBundle\Annotations\Bloc";
+
 	public $layout = false;
-	public $blocs = [];
+	public $blocs = array();
 	 
+	private $reader;
+
 	public function __construct(Reader $reader) {
 		$this->reader = $reader;
 	}

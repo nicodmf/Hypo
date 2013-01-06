@@ -90,18 +90,19 @@ class HypoLayoutListener
 		$paramsConfig = $this->configuration['parameters'];
 		
 
+		$controller = $request->attributes->get('_controller');
+
+		$template = $this->getTemplateName(
+					$this->controllerListener,
+					$controller,
+					$this->configuration['templates']);
+
 		$params = array_merge(
 			is_array($paramsConfig) ? $paramsConfig : array(),
 			array('content' => $response->getContent()),
 			$this->layout->variables
 		);
-		$controller = $request->attributes->get('_controller');
 
-		$template = $this->getTemplateName(
-				   $this->controllerListener,
-					$controller,
-					$this->configuration['templates']);
-		
 		$response->setContent(
 			$this->templating->render(				
 				$template,				

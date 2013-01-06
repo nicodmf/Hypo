@@ -2,11 +2,11 @@
 <html>
     <head>
         <title>Surveillance {{title|default('')}}</title>
-        {{javascript|default('')}}
-        {{getcss(false)}}
-        {{getjs()|default('')}}
+        {{css()}}
+        {{js()}}
     </head>
     <body>
+
 {% set routes = [ {"name":"hypo_test_default_index", "title":"index"}, {"name":"hypo_test_file", "title":"file"}, {"name":"hypo_test_image", "title":"image"} ] %}
 {% if routes is defined %}
     <nav>
