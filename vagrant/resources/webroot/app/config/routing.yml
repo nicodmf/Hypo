@@ -1,0 +1,4 @@
+HypoTestBundle:
+   resource: "@HypoTestBundle/Controller/"
+   type:     annotation
+   prefix:   /

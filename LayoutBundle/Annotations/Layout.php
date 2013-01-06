@@ -1,5 +1,5 @@
 <?php
-// MyBundle/Annotation/MyAnnotation.php
+
 namespace Hypo\LayoutBundle\Annotations;
 
 /**
@@ -10,6 +10,6 @@ class Layout {
 	public $layout;
    
 	public function __construct(array $data) {
-		$this->layout = $data['value'];
+		$this->layout = isset($data) ? $data['value'] : null;
 	}	
 }

@@ -1,15 +1,10 @@
 imports:
-    - { resource: parameters.yml }
     - { resource: security.yml }
+    - { resource: parameters.yml }
     - { resource: hypo.yml }
 
 
 
-fos_user:
-    db_driver: orm # other valid values are 'mongodb', 'couchdb' and 'propel'
-    firewall_name: main
-    user_class: Zephyr\MonArticleBundle\Entity\User 
-    
 framework:
     #esi:             ~
     translator:      { fallback: "%locale%" }

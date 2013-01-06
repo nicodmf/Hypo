@@ -50,20 +50,25 @@ class server_config {
     ensure => directory
   }
 
-  file { 'project.web.dir':
-    path    => '/vagrant/web',
-    ensure  => directory,
-    require => File['project.dir']
-  }
-
-  file { 'logs.dir':
-    path   => '/vagrant/app/logs',
+  file { 'web.dir':
+    path   => '/var/www',
     ensure => directory
   }
 
-  file { 'logs.apache.dir':
-    path    => '/vagrant/app/logs/apache2',
-    ensure  => directory,
-    require => File['logs.dir']
-  }
+  #file { 'project.web.dir':
+  #  path    => '/vagrant/web',
+  #  ensure  => directory,
+  #  require => File['project.dir']
+  #}
+
+  #file { 'logs.dir':
+  #  path   => '/vagrant/app/logs',
+  #  ensure => directory
+  #}
+
+  #file { 'logs.apache.dir':
+  #  path    => '/vagrant/app/logs/apache2',
+  #  ensure  => directory,
+  #  require => File['logs.dir']
+  #}
 }

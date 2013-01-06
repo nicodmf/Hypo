@@ -1,20 +1,23 @@
 hypo: 
   layout:
     activated: true
-    # bloc are parsed
-    blocs: ~
       
     templates:
       # except default treat at the end the templates are verify by order:
       # - annotations
       # - configurations
       # - default
-      default: ZephyrGlobalBundle::layout.vide.html.twig
+      default: HypoTestBundle::layout.html.twig
       global:
-        template: ZephyrGlobalBundle::layout.vide.html.twig
+        template: HypoTestBundle::layout.html.twig
         #indicated as namespaced_class::function
         targets: []
     parameters: ~
+
+    # bloc are parsed
+    blocs:
+      menu: HypoTestBundle::menu.html.twig
+    
   fileserver:
     testfile:
       repository: HypoTestBundle:File #The repository name

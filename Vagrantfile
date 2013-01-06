@@ -7,7 +7,7 @@ Vagrant::Config.run do |config|
 
   config.vm.customize ["modifyvm", :id, "--memory", 768]
 
-  config.vm.network :hostonly, "33.33.33.100"
+  config.vm.network :hostonly, "33.33.33.101"
 
   config.vm.provision :puppet, :options => "--verbose" do |puppet|
     puppet.manifests_path = "vagrant/manifests"

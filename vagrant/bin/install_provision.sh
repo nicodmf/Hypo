@@ -1,15 +1,18 @@
 #!/bin/bash
 
-test_db=dev_epousemoi_fr
-test_db_user=dev_epousemoi_fr
-test_db_pass=Zephyr@1
+test_db=dev_hypo
+test_db_user=dev_hypo
+test_db_pass=dev_hypo
 
-db=dev_epousemoi_fr
-db_user=dev_epousemoi_fr
-db_pass=Zephyr@1
+db=hypo
+db_user=hypo
+db_pass=hypo
+
+symfony_version=2.1.6
 
 web_root=/var/www
 vagrant_root=/vagrant
+vagrant_log_dir=/vagrant/
 
 
 #Test si vagrant est en mode installation
@@ -20,6 +23,7 @@ function test_install(){
 
 #Lance les commandes d'installation
 function install(){
+	echo "Install"
 	#Créé une base de donnée et l'utilisateur
 	function create_user_e_db(){
 		local db=$1
@@ -27,9 +31,9 @@ function install(){
 		local ps=$3
 		local sql=tmpfile
 
-		mysqladmin -uroot -proot create $db
+		mysqladmin -uroot -proot create $db 2>&1
 		echo "grant all privileges on $db.* to $ut@localhost identified by '$ps';" > $sql
-		mysql -uroot -proot < $sql	
+		mysql -uroot -proot < $sql	2>&1
 		rm $sql;
 	}
 	create_user_e_db $test_db $test_db_user $test_db_pass
@@ -40,16 +44,22 @@ function install(){
 
 	function create_symfony(){
 		cd /var
+		service apache2 stop 2>&1
 		rm -rf www
-		php composer.phar create-project symfony/framework-standard-edition $web_root
+		composer create-project symfony/framework-standard-edition $web_root $symfony_version
 		cp -rf $vagrant_root/vagrant/resources/webroot/* $web_root
+		service apache2 start 2>&1
 	}
+	echo "Create symfony"
 	create_symfony
 
 	#Ajoute les acl au fichier /etc/fstab et remonte la partition
 	function add_acl(){
-		fstab=$(cat /etc/fstab| sed -e "s/errors=remount-ro/errors=remount-ro,acl/")
-		echo fstab > /etc/fstab
+		if [[ "$(cat /etc/fstab|grep acl)" = "" ]]
+		then
+			fstab=$(cat /etc/fstab| sed -e "s/errors=remount-ro/errors=remount-ro,acl/")
+			echo $fstab > /etc/fstab
+		fi
 		mount -o remount,acl /dev/mapper/precise32-root
 		set_acls
 	}
@@ -77,31 +87,16 @@ function provision(){
 	#Copie les fichiers
 	#  - à la racine
 	cd $vagrant_root
-	for i in $(ls -a|grep -v vendor|grep -v app| egrep -v "^.$"| egrep -v "^..$"| egrep -v "^.git$"| grep -v "^web$")
-	do
-		cp -ruv $i $web_root
-	done
-	#  - du dossier app
-	cd $vagrant_root/app
-	mkdir $web_root/app 2>&1
-	for i in $(ls -a|grep -v logs|grep -v cache| egrep -v "^.$"| egrep -v "^..$")
-	do
-		cp -ruv $i $web_root/app
-	done
-	#  - du dossier web
-	cd $vagrant_root/web
-	mkdir $web_root/web 2>&1
-	for i in $(ls -a|egrep -v "^.$"| egrep -v "^..$"| egrep -v "^bundles$")
-	do
-		cp -ruv $i $web_root/web
-	done
+	cp -rf $vagrant_root/vagrant/resources/webroot/* $web_root
+	ln -s $vagrant_root $web_root/src/Hypo 2>&1
 
 	#Effectue les mise à jour composer, bases de données et vérifie les droits
 	composer -d=$web_root/ update
-	$web_root/app/console assets:install --symlink $web_root/web
-	$web_root/app/console doctrine:schema:update --force
+	php $web_root/app/console assets:install --symlink $web_root/web
+	php $web_root/app/console doctrine:schema:update --force
 	set_acls
 }
 
-[[ $(test_install) != "install" ]] && install 2>&1 > $vagrant_root/app/logs/vagrant/install.log
-provision 2>&1 > $vagrant_root/app/logs/vagrant/provision.log
+[[ ! -d "/var/log/vagrant" ]] && mkdir /var/log/vagrant
+[[ "$(test_install)" != "install" ]] && install 2>&1 > $vagrant_log_dir/install.log
+provision 2>&1 > $vagrant_log_dir/provision.log

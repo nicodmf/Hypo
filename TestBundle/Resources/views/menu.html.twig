@@ -1,0 +1,9 @@
+{% set routes = [ {"name":"hypo_test_default_index", "title":"index"}, {"name":"hypo_test_file", "title":"file"}, {"name":"hypo_test_image", "title":"image"} ] %}
+{% if routes is defined %}
+    <nav>
+        {% for i in routes %}
+			{% set url, title = url(i.name), i.title|capitalize|trans|raw%}
+			<a href="{{url}}" title="{{title}}">{{title|trans|raw}}</a>
+		{%endfor%}
+    </nav>
+{% endif %}

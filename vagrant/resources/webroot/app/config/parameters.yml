@@ -2,9 +2,9 @@ parameters:
     database_driver:   pdo_mysql
     database_host:     127.0.0.1
     database_port:     ~
-    database_name:     maquette_monarticle_com
-    database_user:     root
-    database_password: loislane
+    database_name:     dev_hypo
+    database_user:     dev_hypo
+    database_password: dev_hypo
 
     mailer_transport:  smtp
     mailer_host:       127.0.0.1
