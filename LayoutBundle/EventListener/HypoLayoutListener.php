@@ -102,13 +102,13 @@ class HypoLayoutListener
 			array('content' => $response->getContent()),
 			$this->layout->variables
 		);
-
-		$response->setContent(
-			$this->templating->render(				
-				$template,				
-				$params
-			)
-		);
+		if($template!=null)
+			$response->setContent(
+				$this->templating->render(				
+					$template,				
+					$params
+				)
+			);
 		$response->setStatusCode(200);
 	 }
 	 

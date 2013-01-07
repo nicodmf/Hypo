@@ -1,4 +1,3 @@
-{% macro link(route, title) %}{% set url = url(route) %}<a href="{{url}}" title="{{title|trans|raw}}">{{title|trans|raw}}</a>{% endmacro %}
 <html>
     <head>
         <title>Surveillance {{title|default('')}}</title>
@@ -10,7 +9,12 @@
 {% set routes = [ {"name":"hypo_test_default_index", "title":"index"}, {"name":"hypo_test_file", "title":"file"}, {"name":"hypo_test_image", "title":"image"} ] %}
 {% if routes is defined %}
     <nav>
-        {% for i in routes %}{{_self.link(i.name, i.title|capitalize)}} {% endfor %}       
+        {% for route in routes %}
+            {% set url = url(route.name), title=route.title|capitalize %}
+            <a href="{{url}}" title="{{title|trans|raw}}">
+                {{title|trans|raw}}
+            </a>
+        {% endfor %}       
     </nav>
 {% endif %}
     {{content|raw}}
