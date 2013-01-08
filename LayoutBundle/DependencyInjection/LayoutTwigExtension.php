@@ -23,7 +23,7 @@ class Container{
 		return $this->link !== null;
 	}
 	static function compare(Container $c1, Container $c2){
-		if($c1->position !== $c2->position );
+		if( $c1->position !== $c2->position )
 			return $c1->position < $c2->position ? -1 : 1;
 		return $c1->order < $c2->order ? -1 : 1;
 	}
@@ -49,7 +49,7 @@ class CSS extends Container{
 		$cpMedia = strcmp($css1->media, $css2->media);
 		if($cpMedia!==0)
 			return $cpMedia;
-		return self::compare($css1, $css2);
+		return parent::compare($css1, $css2);
 	}
 	public function setRules($rules) {
 		$this->rules = $rules;
@@ -129,18 +129,19 @@ class LayoutTwigExtension extends \Twig_Extension {
 			default: call_user_func_array(array($this, "js"), array_merge(array("link"),func_get_args())); break;
 		}
 	}
-	public function getcss($position=null, $media=null, $html="html", $env="dev"){
+	public function getcss($media=null, $position=null, $html="html", $env="dev"){
 		$html = $html==="html";
 		usort($this->css, array( __NAMESPACE__ . "\\css", "compare"));
-		$string = "\n";
-		
+		$string = "\n";		
+
 		foreach($this->css as $css){
 			
 			if(null!==$media and $media!==$css->media)continue;
+
 			if(null!==$position and $position!==$css->position)continue;
 			
 			if($css->isLink()){
-				$link = is_array($js->link) ? $js->link[$env] : $js->link;
+				$link = is_array($css->link) ? $css->link[$env] : $css->link;
 				if($html)
 					$string .= "\t\t".'<link media="'.$css->media.'" rel="stylesheet" type="text/css" href="'.$link.'" />'."\n";
 				else
