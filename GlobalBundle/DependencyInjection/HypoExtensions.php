@@ -15,7 +15,7 @@ class HypoExtensions extends Extension
 	 	}
 		
 		$templates = array();
-		foreach ($config['layout']['templates'] as $key=>$value){
+		/*foreach ($config['layout']['templates'] as $key=>$value){
 			if($key=='default'){
 				$default = $value;
 				continue;
@@ -27,7 +27,7 @@ class HypoExtensions extends Extension
 			$templates["default"] = $default;
 		}
 		
-		$config['layout']['templates'] = $templates;
+		$config['layout']['templates'] = $templates;*/
 			
 		$container->setParameter('hypo.layout.configuration', $config['layout']);
 	}

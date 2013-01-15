@@ -90,17 +90,30 @@ class HypoLayoutListener
 		$paramsConfig = $this->configuration['parameters'];
 		
 
-		$controller = $request->attributes->get('_controller');
+		$controller_method = $request->attributes->get('_controller');
 
 		$template = $this->getTemplateName(
-					$this->controllerListener,
-					$controller,
+					$this->controllerListener->layout,
+					$controller_method,
 					$this->configuration['templates']);
+
+		$twigVars = $this->getTwigVars(
+					$this->controllerListener->twigVars,
+					$controller_method,
+					$this->configuration['vars']);
+
+		$blocs = $this->getBlocs(
+					$this->controllerListener->blocs,
+					$controller_method,
+					$this->configuration['blocs'],
+					$twigVars);
 
 		$params = array_merge(
 			is_array($paramsConfig) ? $paramsConfig : array(),
 			array('content' => $response->getContent()),
-			$this->layout->variables
+			$this->layout->variables,
+			$twigVars,
+			$blocs
 		);
 		if($template!=null)
 			$response->setContent(
@@ -112,15 +125,60 @@ class HypoLayoutListener
 		$response->setStatusCode(200);
 	 }
 	 
-	 public function getTemplateName(&$controllerListener, &$controller_method, &$templates){
-		 if($controllerListener->layout)
-			 return $controllerListener->layout;
-		 foreach($templates as $target=>$template){
-			 if($target=="default")continue;
-			 if(0===strpos($controller_method, $target)){
-				 return $template;
+	 public function getTemplateName($layout, &$controller_method, &$templates){
+		 if($layout)
+			 return $layout;
+		 foreach($templates as $name=>$config){
+			 if($name=="default") continue;
+			 foreach($config['targets'] as $target){
+				if(0===strpos($controller_method, $target)){
+					return $config['template'];
+				}
 			 }
 		 }
 		 return $templates['default'];
+	 }
+	 
+	 public function getTwigVars($vars, &$controller_method, &$config_vars){		 
+		 foreach($config_vars as $name=>$config){
+			 if($name=="default"){
+				 $vars = array_merge_recursive ($config, $vars);
+				 continue;
+			 }
+			 foreach($config['targets'] as $target){
+				if(0===strpos($controller_method, $target)){
+					$vars = array_merge_recursive ($config['vars'], $vars);
+				}
+			 }
+		 }
+		 return $vars;
+	 }
+	 public function getBlocs($_blocs, &$controller_method, &$config_blocs, $vars){
+		 $blocs = array();
+		 $base_template = preg_replace("#::.*#", "", $controller_method);
+		 $base_template = preg_replace("#\\\Controller#", ":", $base_template);
+		 $base_template = preg_replace("#Controller#", "", $base_template);
+		 $base_template = preg_replace("#\\\#", "", $base_template);
+		 foreach ($_blocs as $key=>$value) {
+			if(is_numeric($key)){
+				$name = $value;				
+				$template = $base_template.":".$name.".html.twig";
+			}else{
+				$name = $key;
+				$template = $value;
+			}
+			$blocs[$name] = $this->templating->render($template, array_merge($vars, $blocs));
+		 }
+		 /*
+		 foreach($config_vars as $name=>$config){
+			 if($name=="default")$vars = array_merge_recursive ($config, $vars);
+			 foreach($config['target'] as $target){
+				if(0===strpos($controller_method, $target)){
+					$vars = array_merge_recursive ($config['vars'], $vars);
+				}
+			 }
+		 }
+		 return $vars;*/
+		 return $blocs;
 	 }
 }

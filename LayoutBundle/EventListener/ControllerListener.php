@@ -5,14 +5,18 @@ namespace Hypo\LayoutBundle\EventListener;
 use Doctrine\Common\Annotations\Reader;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Hypo\LayoutBundle\Annotations\Layout;
+use Hypo\LayoutBundle\Annotations\Bloc;
+use Hypo\LayoutBundle\Annotations\TwigVar;
  
 class ControllerListener {
 	
 	const annoLayoutCName = "Hypo\LayoutBundle\Annotations\Layout";
 	const annoBlocCName = "Hypo\LayoutBundle\Annotations\Bloc";
+	const annoVarCName = "Hypo\LayoutBundle\Annotations\TwigVar";
 
 	public $layout = false;
 	public $blocs = array();
+	public $twigVars = array();
 	 
 	private $reader;
 
@@ -31,6 +35,7 @@ class ControllerListener {
  
 		$this->layoutAnnotationReader($controller[0], $controller[1]);
 		$this->blocAnnotationReader($controller[0], $controller[1]);
+		$this->twigvarAnnotationReader($controller[0], $controller[1]);
 	}
 	private function layoutAnnotationReader($class, $method)
 	{
@@ -51,6 +56,17 @@ class ControllerListener {
 		if(! $annotation instanceof Bloc)
 			throw new \Exception("Something go wrong with reader.");
 		
-		$this->blocs = $annotation->blocs;
+		//$this->blocs[] = $annotation->bloc;
+		$this->blocs = array_merge($this->blocs, $annotation->bloc);
+	}
+	private function twigvarAnnotationReader($class, $method)
+	{
+		if(!$annotation = $this->reader->getMethodAnnotation(new \ReflectionMethod($class, $method), self::annoVarCName))
+			if(!$annotation = $this->reader->getClassAnnotation(new \ReflectionClass($class), self::annoVarCName))
+				return;
+		if(! $annotation instanceof TwigVar)
+			throw new \Exception("Something go wrong with reader.");
+		
+		$this->twigVars = array_merge($this->twigVars, $annotation->twigVar);
 	}
 }

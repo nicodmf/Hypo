@@ -5,11 +5,11 @@ namespace Hypo\LayoutBundle\Annotations;
 /**
  * @Annotation
  */
-class Bloc {
+class TwigVar {
 	
-	public $bloc;
+	public $twigVar;
    
 	public function __construct(array $data) {
-		$this->bloc = $data['value'];
+		$this->twigVar = $data['value'];
 	}	
 }
