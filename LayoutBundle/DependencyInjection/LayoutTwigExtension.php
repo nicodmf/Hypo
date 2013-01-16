@@ -79,6 +79,9 @@ class LayoutTwigExtension extends \Twig_Extension {
 		return array(
 			'css'  => new \Twig_Filter_Method($this, 'filter_css', array('is_safe' => array('html'))),
 			'js'  => new \Twig_Filter_Method($this, 'filter_js', array('is_safe' => array('html'))),
+			'var'  => new \Twig_Filter_Method($this, 'variable', array('is_safe' => array('html'))),
+			'get'  => new \Twig_Filter_Method($this, 'get', array('is_safe' => array('html'))),
+			'array'  => new \Twig_Filter_Method($this, 'set_array', array('is_safe' => array('html'))),
 		);
 	}
 
@@ -88,6 +91,9 @@ class LayoutTwigExtension extends \Twig_Extension {
 		return array(
 			'css'  => new \Twig_Function_Method($this, 'css', array('is_safe' => array('html'))),
 			'js'  => new \Twig_Function_Method($this, 'js', array('is_safe' => array('html'))),
+			'var'  => new \Twig_Function_Method($this, 'variable', array('is_safe' => array('html'))),
+			'get'  => new \Twig_Function_Method($this, 'get', array('is_safe' => array('html'))),
+			'array'  => new \Twig_Function_Method($this, 'set_array', array('is_safe' => array('html'))),
 		);
 	}
 
@@ -99,8 +105,16 @@ class LayoutTwigExtension extends \Twig_Extension {
 	}
 	
 	public function variable($name, $value, $merge=false){
-		$this->variables[$name] = $merge ? $this->variables[$name] : "";
-		$this->variables[$name] = "$value";		
+		//TODO add scalar test on value and $this->variables[$name]
+		$this->variables[$name] = $merge ? $this->variables[$name] : $value;		
+	}
+
+	public function get($name){
+		return isset($this->variables[$name]) ? $this->variables[$name] : null;
+	}
+
+	public function set_array($name, $key, $value){
+		$this->variables[$name][$key] = $value;
 	}
 
 	public function filter_css($css, $position=null, $media="all", $html='html')
