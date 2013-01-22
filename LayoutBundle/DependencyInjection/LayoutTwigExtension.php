@@ -36,13 +36,16 @@ class Container{
 class CSS extends Container{
 	public $rules=null;
 	public $media="all";
+	
 	public function __construct($media="all", $position=null, $html='html'){
 		$this->media = $media;
 		parent::__construct($position, $html);
 	}
+	
 	static public function create($media="all", $position=null, $html='html') {
 		return new CSS($media, $position, $html);
 	}
+	
 	static function compare(Container $css1, Container $css2){
 		if($css1->rules === null && $css2->rules !== null) return  1;
 		if($css1->rules !== null && $css2->rules === null) return -1;
@@ -51,10 +54,12 @@ class CSS extends Container{
 			return $cpMedia;
 		return parent::compare($css1, $css2);
 	}
+	
 	public function setRules($rules) {
 		$this->rules = $rules;
 		return $this;
 	}
+	
 }
 class JS extends Container{
 	public $script=null;
@@ -79,6 +84,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 		return array(
 			'css'  => new \Twig_Filter_Method($this, 'filter_css', array('is_safe' => array('html'))),
 			'js'  => new \Twig_Filter_Method($this, 'filter_js', array('is_safe' => array('html'))),
+			'jss'  => new \Twig_Filter_Method($this, 'filter_jss', array('is_safe' => array('html'))),
 			'var'  => new \Twig_Filter_Method($this, 'variable', array('is_safe' => array('html'))),
 			'get'  => new \Twig_Filter_Method($this, 'get', array('is_safe' => array('html'))),
 			'array'  => new \Twig_Filter_Method($this, 'set_array', array('is_safe' => array('html'))),
@@ -91,6 +97,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 		return array(
 			'css'  => new \Twig_Function_Method($this, 'css', array('is_safe' => array('html'))),
 			'js'  => new \Twig_Function_Method($this, 'js', array('is_safe' => array('html'))),
+			'jss'  => new \Twig_Function_Method($this, 'jss', array('is_safe' => array('html'))),
 			'var'  => new \Twig_Function_Method($this, 'variable', array('is_safe' => array('html'))),
 			'get'  => new \Twig_Function_Method($this, 'get', array('is_safe' => array('html'))),
 			'array'  => new \Twig_Function_Method($this, 'set_array', array('is_safe' => array('html'))),
@@ -125,6 +132,11 @@ class LayoutTwigExtension extends \Twig_Extension {
 	{ 
 		$this->js('src', $js, $position, $html);
 	}
+	public function filter_jss(array $jss, $position=null, $html='html')
+	{
+		foreach($jss as $js)
+			$this->js('src', $js, $position, $html);
+	}
 	public function css($action='display', $css="", $position=null, $media="all", $html='html')
 	{
 		switch($action){
@@ -133,6 +145,11 @@ class LayoutTwigExtension extends \Twig_Extension {
 			case 'src': $this->css[] = CSS::create($media, $position, $html)->setRules($css); break;
 			default: call_user_func_array(array($this, "js"), array_merge(array("link"),func_get_args())); break;
 		}
+	}
+	public function jss($action='display', array $jss, $position=null, $html='html')
+	{
+		foreach($jss as $js)
+			$this->js($action, $js, $position, $html);
 	}
 	public function js($action='display', $js="", $position=null, $html='html')
 	{
