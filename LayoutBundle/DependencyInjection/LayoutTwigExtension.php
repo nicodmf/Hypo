@@ -88,6 +88,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 			'var'  => new \Twig_Filter_Method($this, 'variable', array('is_safe' => array('html'))),
 			'get'  => new \Twig_Filter_Method($this, 'get', array('is_safe' => array('html'))),
 			'array'  => new \Twig_Filter_Method($this, 'set_array', array('is_safe' => array('html'))),
+			'typeof'  => new \Twig_Filter_Method($this, 'gettypeof', array('is_safe' => array('html'))),
 		);
 	}
 
@@ -101,6 +102,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 			'var'  => new \Twig_Function_Method($this, 'variable', array('is_safe' => array('html'))),
 			'get'  => new \Twig_Function_Method($this, 'get', array('is_safe' => array('html'))),
 			'array'  => new \Twig_Function_Method($this, 'set_array', array('is_safe' => array('html'))),
+			'typeof'  => new \Twig_Function_Method($this, 'gettypeof', array('is_safe' => array('html'))),
 		);
 	}
 
@@ -109,6 +111,10 @@ class LayoutTwigExtension extends \Twig_Extension {
 		return array(
 			new VariableTokenParser(),
 		);
+	}
+	
+	public function gettypeof($var){
+		return gettype($var);		
 	}
 	
 	public function variable($name, $value, $merge=false){
