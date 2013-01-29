@@ -4,6 +4,24 @@ namespace Hypo\LayoutBundle\DependencyInjection;
 
 use Symfony\Component\Translation\TranslatorInterface;
 
+
+class Twig_Function_Method extends \Twig_Function_Method{
+	public function __construct(\Twig_ExtensionInterface $extension, $method, array $options = array())
+    {
+        $options = array_merge(array('needs_environment'=> false, 'is_safe' => array('html')), $options);
+        parent::__construct($extension, $method, $options);
+    }
+}
+
+class Twig_Filter_Method extends \Twig_Filter_Method{
+	public function __construct(\Twig_ExtensionInterface $extension, $method, array $options = array())
+    {
+        $options = array_merge(array('needs_context'=> false, 'needs_context'=> false, 'is_safe' => array('html')), $options);
+        parent::__construct($extension, $method, $options);
+    }
+}
+
+
 class Container{
 	static $inc=1;
 	public $order;
@@ -14,6 +32,7 @@ class Container{
 		$this->position = $position;
 		$this->html = $html==="html";
 		$this->order = static::$inc++;
+		$this->file_position = LayoutTwigExtension::getLineAndFile();
 	}
 	static public function create($position=null, $html='html') {
 		$class = get_called_class();	
@@ -75,20 +94,36 @@ class LayoutTwigExtension extends \Twig_Extension {
 	protected $js = array();
 	public $variables = array();
 
+	/**
+	 *
+	 * @var \Twig_Environment 
+	 */	
+	static public $env;
+	
 	public function __construct()
 	{
+		
 	}
-	
+	public function initRuntime(\Twig_Environment $environment)
+	{
+		self::$env = $environment;
+	}
+	/**
+	 *
+	 * @var \Twig_Filter_Method
+	 */
+	public $filter_css;
 	public function getFilters()
 	{
+		$this->filter_css;
 		return array(
-			'css'  => new \Twig_Filter_Method($this, 'filter_css', array('is_safe' => array('html'))),
-			'js'  => new \Twig_Filter_Method($this, 'filter_js', array('is_safe' => array('html'))),
-			'jss'  => new \Twig_Filter_Method($this, 'filter_jss', array('is_safe' => array('html'))),
-			'var'  => new \Twig_Filter_Method($this, 'variable', array('is_safe' => array('html'))),
-			'get'  => new \Twig_Filter_Method($this, 'get', array('is_safe' => array('html'))),
-			'array'  => new \Twig_Filter_Method($this, 'set_array', array('is_safe' => array('html'))),
-			'typeof'  => new \Twig_Filter_Method($this, 'gettypeof', array('is_safe' => array('html'))),
+			'css' => new Twig_Filter_Method($this, 'filter_css'),
+			'js'  => new Twig_Filter_Method($this, 'filter_js'),
+			'jss' => new Twig_Filter_Method($this, 'filter_jss'),
+			'var' => new Twig_Filter_Method($this, 'variable'),
+			'get' => new Twig_Filter_Method($this, 'get'),
+			'array' => new Twig_Filter_Method($this, 'set_array'),
+			'typeof' => new Twig_Filter_Method($this, 'gettypeof'),
 		);
 	}
 
@@ -96,14 +131,26 @@ class LayoutTwigExtension extends \Twig_Extension {
 	{
 		//\Twig_NodeVisitor_SafeAnalysis::setSafe();
 		return array(
-			'css'  => new \Twig_Function_Method($this, 'css', array('is_safe' => array('html'))),
-			'js'  => new \Twig_Function_Method($this, 'js', array('is_safe' => array('html'))),
-			'jss'  => new \Twig_Function_Method($this, 'jss', array('is_safe' => array('html'))),
-			'var'  => new \Twig_Function_Method($this, 'variable', array('is_safe' => array('html'))),
-			'get'  => new \Twig_Function_Method($this, 'get', array('is_safe' => array('html'))),
-			'array'  => new \Twig_Function_Method($this, 'set_array', array('is_safe' => array('html'))),
-			'typeof'  => new \Twig_Function_Method($this, 'gettypeof', array('is_safe' => array('html'))),
+			'css'  => new Twig_Function_Method($this, 'css'),
+			'js'  => new Twig_Function_Method($this, 'js'),
+			'jss'  => new Twig_Function_Method($this, 'jss'),
+			'var'  => new Twig_Function_Method($this, 'variable'),
+			'get'  => new Twig_Function_Method($this, 'get'),
+			'array'  => new Twig_Function_Method($this, 'set_array'),
+			'typeof'  => new Twig_Function_Method($this, 'gettypeof'),
+			'getPositions'  => new Twig_Function_Method($this, 'getPositions'),
 		);
+	}
+	
+	public function getPositions(){
+		$this->getPositionsByArray($this->css);
+		$this->getPositionsByArray($this->js);
+	}
+
+	public function getPositionsByArray($array){
+		foreach($array as $k=>$o){
+			echo $o->position." ".$o->link ." ".$o->file_position."<br>\n ";
+		}
 	}
 
 	public function getTokenParsers()
@@ -113,6 +160,21 @@ class LayoutTwigExtension extends \Twig_Extension {
 		);
 	}
 	
+	static public function getLineAndFile(){
+		$o = self::$env->getLexer();
+		$c = new \ReflectionClass(get_class($o));
+		foreach($c->getProperties() as $p){
+			if($p->name == 'lineno'){
+				$p->setAccessible(true);
+				$lineno = $p->getValue($o);
+			}
+			if($p->name == 'filename'){
+				$p->setAccessible(true);
+				$filename = $p->getValue($o);
+			}
+		}
+		return $lineno.' '.trim($filename);
+	}
 	public function gettypeof($var){
 		return gettype($var);		
 	}
@@ -149,7 +211,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 			case 'display' : return $this->getcss($media, $position, $html);
 			case 'link': $this->css[] = CSS::create($media, $position, $html)->setLink($css); break;
 			case 'src': $this->css[] = CSS::create($media, $position, $html)->setRules($css); break;
-			default: call_user_func_array(array($this, "js"), array_merge(array("link"),func_get_args())); break;
+			default: call_user_func_array(array($this, "css"), array_merge(array("link"),func_get_args())); break;
 		}
 	}
 	public function jss($action='display', array $jss, $position=null, $html='html')
@@ -169,7 +231,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 	public function getcss($media=null, $position=null, $html="html", $env="dev"){
 		$html = $html==="html";
 		usort($this->css, array( __NAMESPACE__ . "\\css", "compare"));
-		$string = "\n";		
+		$string = "\n";
 
 		foreach($this->css as $css){
 			
