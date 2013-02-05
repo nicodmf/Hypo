@@ -139,9 +139,18 @@ class LayoutTwigExtension extends \Twig_Extension {
 			'array'  => new Twig_Function_Method($this, 'set_array'),
 			'typeof'  => new Twig_Function_Method($this, 'gettypeof'),
 			'getPositions'  => new Twig_Function_Method($this, 'getPositions'),
+			'titre'  => new Twig_Function_Method($this, 'titre'),
 		);
 	}
-	
+	public function titre($text=null, $append=false){
+		if(!isset($text))
+			return isset($this->titre) ? $this->titre : "";
+
+		if($append and isset($this->titre))
+			$this->titre.= $text;
+		else 
+			$this->titre = $text;
+	}
 	public function getPositions(){
 		$this->getPositionsByArray($this->css);
 		$this->getPositionsByArray($this->js);
