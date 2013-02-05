@@ -158,7 +158,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 
 	public function getPositionsByArray($array){
 		foreach($array as $k=>$o){
-			echo $o->position." ".$o->link ." ".$o->file_position."<br>\n ";
+			echo ($o->position==null?0:$o->position)."-".$o->order." \t".$o->file_position." ".$o->link."<br>\n";
 		}
 	}
 
@@ -248,10 +248,13 @@ class LayoutTwigExtension extends \Twig_Extension {
 
 			if(null!==$position and $position!==$css->position)continue;
 			
+			$internal_position = $css->position==null?0:$css->position;
+			$string .= "\n<!-- libcss:".$internal_position.'-'.$css->order."-->\n";
+			
 			if($css->isLink()){
 				$link = is_array($css->link) ? $css->link[$env] : $css->link;
 				if($html)
-					$string .= "\t\t".'<link media="'.$css->media.'" rel="stylesheet" type="text/css" href="'.$link.'" />'."\n";
+					$string .= "\t\t".'<link rel="stylesheet" type="text/css" href="'.$link.'" />'."\n";
 				else
 					$string .= $link."\n";
 			}else{
@@ -260,6 +263,8 @@ class LayoutTwigExtension extends \Twig_Extension {
 				else
 					$string .= $css->rules."\n";
 			}
+			
+			$string .= "<!-- endlibcss:".$internal_position.'-'.$css->order."-->\n\n";
 		}		
 		return $string;
 	}
@@ -271,6 +276,9 @@ class LayoutTwigExtension extends \Twig_Extension {
 		foreach($this->js as $js){
 			
 			if(null!==$position and $position!==$js->position) continue;
+			
+			$internal_position = $js->position==null?0:$js->position;
+			$string .= "\n<!-- libjs:".$internal_position.'-'.$js->order."-->\n";
 			
 			if($js->isLink()){
 				$link = is_array($js->link) ? $js->link[$env] : $js->link;
@@ -284,6 +292,8 @@ class LayoutTwigExtension extends \Twig_Extension {
 				else
 					$string .= $js->script."\n";
 			}
+			
+			$string .= "<!-- endlibjs:".$internal_position.'-'.$js->order."-->\n\n";
 		}
 		return trim($string);
 	}
