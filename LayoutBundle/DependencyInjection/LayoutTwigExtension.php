@@ -16,7 +16,7 @@ class Twig_Function_Method extends \Twig_Function_Method{
 class Twig_Filter_Method extends \Twig_Filter_Method{
 	public function __construct(\Twig_ExtensionInterface $extension, $method, array $options = array())
     {
-        $options = array_merge(array('needs_context'=> false, 'needs_context'=> false, 'is_safe' => array('html')), $options);
+        $options = array_merge(array('needs_environment'=> false, 'needs_context'=> false, 'is_safe' => array('html')), $options);
         parent::__construct($extension, $method, $options);
     }
 }
@@ -140,6 +140,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 			'typeof'  => new Twig_Function_Method($this, 'gettypeof'),
 			'getPositions'  => new Twig_Function_Method($this, 'getPositions'),
 			'titre'  => new Twig_Function_Method($this, 'titre'),
+			'debug'  => new \Twig_Function_Method($this, 'debug', array('needs_environment'=> false, 'needs_context'=>true, 'is_safe'=>array('html'))),
 		);
 	}
 	public function titre($text=null, $append=false){
@@ -193,8 +194,32 @@ class LayoutTwigExtension extends \Twig_Extension {
 		$this->variables[$name] = $merge ? $this->variables[$name] : $value;		
 	}
 
-	public function get($name){
-		return isset($this->variables[$name]) ? $this->variables[$name] : null;
+	public function get($name, $default=null){
+		return isset($this->variables[$name]) ? $this->variables[$name] : $default;
+	}
+
+	public function debug($context, $name=null, $var=null){
+		
+		if(null!==$var)$context = $var;
+		
+		if(isset($context[$name]))
+			$var = $context[$name];
+		elseif(null===$name)
+			$var = $context;
+		else
+			$var = null;
+			
+		echo "<div><h3>".$name."</h3>";
+		if(null!==$var){
+			if(is_array($var) or is_object($var)){
+				foreach($var as $k=>$v){
+					echo "keys: ".$k."<br>";
+				}
+			}else
+				echo "value: ".$var."<br>";
+		}else
+			echo "no value";
+		echo "</div>";
 	}
 
 	public function set_array($name, $key, $value){
