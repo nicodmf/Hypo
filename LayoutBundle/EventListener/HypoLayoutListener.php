@@ -147,7 +147,7 @@ class HypoLayoutListener
 				$name = $key;
 				$template = $value;
 			}
-			$blocs[$name] = $this->templating->render($template, array_merge($vars, $blocs));
+			$blocs[$name] = $this->templating->render($template, $blocs);
 		 }
 		 /*
 		 foreach($config_vars as $name=>$config){
