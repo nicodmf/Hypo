@@ -93,6 +93,7 @@ class LayoutTwigExtension extends \Twig_Extension {
 	protected $css = array();
 	protected $js = array();
 	public $variables = array();
+	protected $titre;
 
 	/**
 	 *
@@ -143,15 +144,29 @@ class LayoutTwigExtension extends \Twig_Extension {
 			'debug'  => new \Twig_Function_Method($this, 'debug', array('needs_environment'=> false, 'needs_context'=>true, 'is_safe'=>array('html'))),
 		);
 	}
-	public function titre($text=null, $append=false){
-		if(!isset($text))
-			return isset($this->titre) ? $this->titre : "";
+	public function titre($text=null, $append=true)
+	{		
+		return (null!==$text) ? $this->setTitre($text, $append) : $this->getTitre();
+	}
 
-		if($append and isset($this->titre))
+	public function getTitre()
+	{
+			if(isset($this->titre))
+				return $this->titre;
+			elseif(isset($this->variables['titre']))
+				return $this->variables['titre'];
+			else
+				return "";
+	}
+
+	public function setTitre($text=null, $append=true)
+	{
+		if($append && isset($this->titre))
 			$this->titre.= $text;
 		else 
 			$this->titre = $text;
 	}
+	
 	public function getPositions(){
 		$this->getPositionsByArray($this->css);
 		$this->getPositionsByArray($this->js);

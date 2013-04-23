@@ -97,24 +97,18 @@ class HypoLayoutListener
 					$controller_method,
 					$this->configuration['templates']);
 
-		$twigVars = $this->getTwigVars(
-					$this->controllerListener->twigVars,
-					$controller_method,
-					$this->configuration['vars']);
-
 		$blocs = $this->getBlocs(
 					$this->controllerListener->blocs,
 					$controller_method,
-					$this->configuration['blocs'],
-					$twigVars);
+					$this->configuration['blocs']);
 
 		$params = array_merge(
 			is_array($paramsConfig) ? $paramsConfig : array(),
 			array('content' => $response->getContent()),
 			$this->layout->variables,
-			$twigVars,
 			$blocs
 		);
+
 		if($template!=null)
 			$response->setContent(
 				$this->templating->render(				
@@ -139,21 +133,7 @@ class HypoLayoutListener
 		 return $templates['default'];
 	 }
 	 
-	 public function getTwigVars($vars, &$controller_method, &$config_vars){		 
-		 foreach($config_vars as $name=>$config){
-			 if($name=="default"){
-				 $vars = array_merge_recursive ($config, $vars);
-				 continue;
-			 }
-			 foreach($config['targets'] as $target){
-				if(0===strpos($controller_method, $target)){
-					$vars = array_merge_recursive ($config['vars'], $vars);
-				}
-			 }
-		 }
-		 return $vars;
-	 }
-	 public function getBlocs($_blocs, &$controller_method, &$config_blocs, $vars){
+	 public function getBlocs($_blocs, &$controller_method, &$config_blocs){
 		 $blocs = array();
 		 $base_template = preg_replace("#::.*#", "", $controller_method);
 		 $base_template = preg_replace("#\\\Controller#", ":", $base_template);

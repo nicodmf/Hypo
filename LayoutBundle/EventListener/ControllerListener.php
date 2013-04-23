@@ -20,8 +20,9 @@ class ControllerListener {
 	 
 	private $reader;
 
-	public function __construct(Reader $reader) {
+	public function __construct(Reader $reader, $kernel) {
 		$this->reader = $reader;
+		$this->container = $kernel->getContainer();
 	}
 	 
 	public function onCoreController(FilterControllerEvent $event) {
@@ -64,9 +65,12 @@ class ControllerListener {
 		if(!$annotation = $this->reader->getMethodAnnotation(new \ReflectionMethod($class, $method), self::annoVarCName))
 			if(!$annotation = $this->reader->getClassAnnotation(new \ReflectionClass($class), self::annoVarCName))
 				return;
+			
 		if(! $annotation instanceof TwigVar)
 			throw new \Exception("Something go wrong with reader.");
 		
-		$this->twigVars = array_merge($this->twigVars, $annotation->twigVar);
+		foreach($annotation->twigVar as $key=>$value){
+			$this->container->get("hypo.layout.helpers.twig.extension")->variable($key, $value);
+		}
 	}
 }

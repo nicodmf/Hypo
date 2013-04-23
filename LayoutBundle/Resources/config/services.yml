@@ -26,4 +26,4 @@ services:
        class: Hypo\LayoutBundle\EventListener\ControllerListener
        tags:
            - { name: kernel.event_listener, event: kernel.controller, method: onCoreController, priority:-255 }
-       arguments: ["@annotation_reader"]
+       arguments: [ "@annotation_reader", "@kernel" ]
